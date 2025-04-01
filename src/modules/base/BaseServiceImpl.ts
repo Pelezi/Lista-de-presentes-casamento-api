@@ -19,10 +19,6 @@ export class BaseServiceImpl<T, U, V> implements BaseService<T, U, V> {
         return this.baseRepository.getItemById(id);
     }
 
-    async getItemByUuid(uuid: string): Promise<T> {
-        return this.baseRepository.getItemByUuid(uuid);
-    }
-
     async createItem(item: U): Promise<T> {
         return this.baseRepository.createItem(item);
     }
@@ -31,15 +27,8 @@ export class BaseServiceImpl<T, U, V> implements BaseService<T, U, V> {
         return this.baseRepository.updateItem(id, item);
     }
 
-    async updateItemByUuid(uuid: string, item: V): Promise<T> {
-        return this.baseRepository.updateItemByUuid(uuid, item);
-    }
-
     async deleteItem(id: number): Promise<void> {
         return this.baseRepository.deleteItem(id);
     }
 
-    async deleteItemByUuid(uuid: string, item: string): Promise<void> {
-        return this.baseRepository.deleteItemByUuid(uuid, item);
-    }
 }

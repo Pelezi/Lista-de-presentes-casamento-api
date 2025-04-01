@@ -10,7 +10,6 @@ import {
     GiftDTO
 } from '../../../dtos/GiftDTO';
 
-
 @injectable()
 export class GiftControllerImpl
     extends BaseControllerImpl<GiftDTO, CreateGiftDTO, UpdateGiftDTO> {
@@ -21,50 +20,33 @@ export class GiftControllerImpl
     ) {
         super(giftService);
     }
-
-    public async getByGuest(req: Request, res: Response): Promise<Response> {
-        const { guestId } = req.params;
-        const gifts = await this.giftService.getByGuest(guestId);
-        return res.json(gifts);
-    }
-
+    
     public async getAllInfo(req: Request, res: Response): Promise<Response> {
         const { giftId } = req.params;
         const gift = await this.giftService.getAllInfo(giftId);
         return res.json(gift);
     }
 
-    public async addGiftToGuest(req: Request, res: Response): Promise<Response> {
-        const { giftId, guestId } = req.params;
-        const gift = await this.giftService.addGiftToGuest(giftId, guestId);
-        return res.json(gift);
-    }
-
-    public async removeGiftFromGuest(req: Request, res: Response): Promise<Response> {
-        const { giftId, guestId } = req.params;
-        await this.giftService.removeGiftFromGuest(giftId, guestId);
-        return res.status(204).send();
-    }
-
     public async createItem(req: Request, res: Response): Promise<Response> {
         const { guestId } = req.query;
         const createGiftDTO: CreateGiftDTO = { ...req.body, guestId: guestId as string };
-        const gift = await this.giftService.createItem(createGiftDTO);
+        const photo = req.file;
+        const gift = await this.giftService.createItem(createGiftDTO, photo);
         return res.json(gift);
     }
 
-    public async updateItemByUuid(req: Request, res: Response): Promise<Response> {
-        const { uuid } = req.params;
+    public async updateItem(req: Request, res: Response): Promise<Response> {
+        const { id } = req.params;
         const { guestId } = req.query;
         const updateGiftDTO: UpdateGiftDTO = { ...req.body, guestId: guestId as string };
-        const gift = await this.giftService.updateItemByUuid(uuid, updateGiftDTO);
+        const photo = req.file;
+        const gift = await this.giftService.updateItem(Number(id), updateGiftDTO, photo);
         return res.json(gift);
     }
 
-    public async deleteItemByUuid(req: Request, res: Response): Promise<Response> {
-        const { uuid } = req.params;
-        const { guestId } = req.query;
-        await this.giftService.deleteItemByUuid(uuid, guestId as string);
+    public async deleteItem(req: Request, res: Response): Promise<Response> {
+        const { id } = req.params;
+        await this.giftService.deleteItem(Number(id));
         return res.status(204).send();
     }
 

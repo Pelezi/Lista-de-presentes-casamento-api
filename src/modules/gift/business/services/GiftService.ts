@@ -8,9 +8,8 @@ import {
 
 export interface GiftService 
     extends BaseService<GiftDTO, CreateGiftDTO, UpdateGiftDTO> {
-        getByGuest(guestId: string): Promise<GiftDTO[]>;
+        createItem(createGiftDTO: CreateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO>;
+        updateItem(id: number, updateGiftDTO: UpdateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO>;
         getAllInfo(giftId: string): Promise<GiftDTO>;
-        addGiftToGuest(giftId: string, guestId: string): Promise<GiftDTO>;
-        removeGiftFromGuest(giftId: string, guestId: string): Promise<void>;
         telegramMessage(type:string, guest: string): Promise<void>;
     }

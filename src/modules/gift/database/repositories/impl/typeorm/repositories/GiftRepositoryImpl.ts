@@ -1,4 +1,4 @@
-import { Gift, GiftGuest } from "../entities/gift.entity";
+import { Gift } from "../entities/gift.entity";
 
 import {
     GiftDTO,
@@ -8,6 +8,12 @@ import {
 
 import { BaseRepositoryImpl } from '../../../../../../base/BaseRepositoryImpl';
 
+import { uploadFile, deleteFile, getObjectSignedUrl } from "modules/utils/aws";
+
+import crypto from 'crypto';
+import sharp from 'sharp';
+
+const generateFileName = (bytes = 16) => crypto.randomBytes(bytes).toString('hex')
 export class GiftRepositoryImpl
     extends BaseRepositoryImpl<GiftDTO, CreateGiftDTO, UpdateGiftDTO> {
 
@@ -15,42 +21,58 @@ export class GiftRepositoryImpl
         super('id', Gift);
     }
 
-    async getByGuest(guestId: string): Promise<GiftDTO[]> {
-        const gifts = await this.typeormRepository.createQueryBuilder('gift')
-            .leftJoin('gift.guests', 'guests')
-            .leftJoin('guests.guest', 'guest')
-            .select([
-                'gift.id',
-                'gift.name',
-                'gift.photoUrl',
-                'gift.quantity',
-                'gift.description',
-                'guests.count',
-            ])
-            .where('guest.id = :guestId', { guestId })
-            .getMany();
 
-        if (!gifts) {
+    async createItem(createGiftDTO: CreateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO> {
+        const fileName = generateFileName();
+
+        const fileBuffer = await sharp(photo.buffer)
+            .resize({ height: 1080, width: 1080, fit: "contain" })
+            .toBuffer()
+        
+        await uploadFile(fileBuffer, fileName, photo.mimetype);
+
+        const newGiftData = {
+            ...createGiftDTO,
+            fileName: fileName,
+        }
+
+        const gift = this.typeormRepository.create(newGiftData);
+        await this.typeormRepository.save(gift);
+        return gift;
+    }
+
+    async updateItem(id: number, updateGiftDTO: UpdateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO> {
+        const gift = await this.getItemById(id);
+        if (!gift) {
             throw new Error(`Registro não encontrado!`);
         }
 
-        return gifts;
+        if (photo) {
+            const fileName = generateFileName();
+
+            const fileBuffer = await sharp(photo.buffer)
+                .resize({ height: 1080, width: 1080, fit: "contain" })
+                .toBuffer()
+            
+            await uploadFile(fileBuffer, fileName, photo.mimetype);
+
+            await deleteFile(gift.fileName);
+            gift.fileName = fileName;
+        }
+
+        Object.assign(gift, updateGiftDTO);
+        await this.typeormRepository.save(gift);
+        return gift;
     }
 
     async getAllInfo(giftId: string): Promise<GiftDTO> {
         const gift = await this.typeormRepository.createQueryBuilder('gift')
-            .leftJoin('gift.guests', 'guests')
-            .leftJoin('guests.guest', 'guest')
             .select([
                 'gift.id',
                 'gift.name',
-                'gift.photoUrl',
-                'gift.quantity',
-                'gift.description',
-                'guests.count',
-                'guest.id',
-                'guest.name',
-                'guest.phone',
+                'gift.fileName',
+                'gift.value',
+                'gift.mpcode',
             ])
             .where('gift.id = :giftId', { giftId })
             .getOne();
@@ -62,77 +84,16 @@ export class GiftRepositoryImpl
         return gift;
     }
 
-    async addGiftToGuest(giftId: string, guestId: string): Promise<GiftDTO> {
-        const gift = await this.getAllInfo(giftId);
-        
-        if (!gift) {
-            throw new Error(`Registro não encontrado!`);
-        }
-
-        const totalGuestCount = gift.guests.reduce((sum, guest) => sum + guest.count, 0);
-        if (totalGuestCount >= gift.quantity) {
-            throw new Error(`Este presente não pode mais ser resgatado.`);
-        }
-        
-        const giftGuestRepository = this.typeormRepository.manager.getRepository(GiftGuest);
-        let giftGuest = await giftGuestRepository.findOne({ where: { gift: { id: giftId }, guest: { id: guestId } } });
-
-        if (giftGuest) {
-            giftGuest.count += 1;
-        } else {
-            giftGuest = giftGuestRepository.create({ gift, guest: { id: guestId }, count: 1 });
-        }
-
-        await giftGuestRepository.save(giftGuest);
-
-        const addedGift = await this.getAllInfo(giftId);
-
-        if (!addedGift) {
-            throw new Error(`Registro não encontrado!`);
-        } else if (!addedGift.guests) {
-            throw new Error(`Erro ao salvar o presente!`);
-        } else {
-            return addedGift;
-        }
-    }
-
-    async removeGiftFromGuest(giftId: string, guestId: string): Promise<void> {
-        const gift = await this.getAllInfo(giftId);
-
-        if (!gift) {
-            throw new Error(`Registro não encontrado!`);
-        }
-
-        const giftGuestRepository = this.typeormRepository.manager.getRepository(GiftGuest);
-        let giftGuest = await giftGuestRepository.findOne({ where: { gift: { id: giftId }, guest: { id: guestId } } });
-
-        if (giftGuest) {
-            giftGuest.count -= 1;
-            if (giftGuest.count <= 0) {
-                await giftGuestRepository.remove(giftGuest);
-            } else {
-                await giftGuestRepository.save(giftGuest);
-            }
-        } else {
-            throw new Error(`Convidado não associado a este presente!`);
-        }
-    }
-
     async getItems(): Promise<GiftDTO[]> {
         const gifts = await this.typeormRepository.createQueryBuilder('gift')
-            .leftJoin('gift.guests', 'guests')
-            .leftJoin('guests.guest', 'guest')
             .select([
                 'gift.id',
                 'gift.name',
-                'gift.photoUrl',
-                'gift.quantity',
-                'gift.description',
-                'COALESCE(SUM(guests.count), 0) as totalCount',
+                'gift.fileName',
+                'gift.value',
+                'gift.mpcode',
             ])
             .groupBy('gift.id')
-            .orderBy('CASE WHEN COALESCE(SUM(guests.count), 0) >= gift.quantity THEN 1 ELSE 0 END', 'ASC')
-            .addOrderBy('COALESCE(SUM(guests.count), 0)', 'ASC')
             .getRawMany();
 
         if (!gifts) {
@@ -142,11 +103,9 @@ export class GiftRepositoryImpl
         return gifts.map(gift => ({
             id: gift.gift_id,
             name: gift.gift_name,
-            photoUrl: gift.gift_photo_url,
-            quantity: gift.gift_quantity,
-            description: gift.gift_description,
-            guests: [],
-            count: Number(gift.totalcount),
+            fileName: gift.gift_file_name,
+            value: gift.gift_value,
+            mpcode: gift.gift_mpcode,
         }));
     }
 

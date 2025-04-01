@@ -24,21 +24,16 @@ export class GiftServiceImpl
                 super(giftRepository);
             }
 
-    async getByGuest(guestId: string): Promise<GiftDTO[]> {
-        return this.giftRepository.getByGuest(guestId);
+    async createItem(createGiftDTO: CreateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO> {
+        return this.giftRepository.createItem(createGiftDTO, photo);
     }
 
-
+    async updateItem(id: number, updateGiftDTO: UpdateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO> {
+        return this.giftRepository.updateItem(id, updateGiftDTO, photo);
+    }
+    
     async getAllInfo(giftId: string): Promise<GiftDTO> {
         return this.giftRepository.getAllInfo(giftId);
-    }
-
-    async addGiftToGuest(giftId: string, guestId: string): Promise<GiftDTO> {
-        return this.giftRepository.addGiftToGuest(giftId, guestId);
-    }
-
-    async removeGiftFromGuest(giftId: string, guestId: string): Promise<void> {
-        await this.giftRepository.removeGiftFromGuest(giftId, guestId);
     }
 
     async telegramMessage(type: string, guest: string): Promise<void> {

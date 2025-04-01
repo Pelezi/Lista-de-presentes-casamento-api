@@ -1,11 +1,10 @@
-import { Gift, GiftGuest } from "../../../../../../gift/database/repositories/impl/typeorm/entities/gift.entity";
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
 
 @Entity()
 export class Guest {
 
-    @PrimaryGeneratedColumn("uuid")
+    @PrimaryGeneratedColumn("increment")
     id: string;
 
     @Column()
@@ -13,8 +12,5 @@ export class Guest {
 
     @Column()
     phone: string;
-
-    @OneToMany(() => GiftGuest, giftGuest => giftGuest.guest)
-    gifts: Gift[];
 
 }

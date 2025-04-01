@@ -45,19 +45,6 @@ export class BaseRepositoryImpl<T, U, V> implements BaseRepository<T, U, V> {
         return item;
     }
 
-    async getItemByUuid(uuid: string): Promise<T> {
-        const item =  await this.typeormRepository.findOne({
-            where: { [this.primaryKey]: uuid } as FindOptionsWhere<T>
-        });
-
-        if (!item) {
-            throw new Error(`Registro não encontrado!`);
-        }
-
-        return item;
-
-    }
-
     async createItem(item: U): Promise<T> {
         const newItem = this.typeormRepository.create(item as DeepPartial<T>);
 
@@ -70,21 +57,9 @@ export class BaseRepositoryImpl<T, U, V> implements BaseRepository<T, U, V> {
         return await this.getItemById(id);
     }
 
-    async updateItemByUuid(uuid: string, item: V): Promise<T> {
-        await this.typeormRepository.update(uuid, item as QueryDeepPartialEntity<T>);
-
-        return await this.getItemByUuid(uuid);
-    }
-
     async deleteItem(id: number): Promise<void> {
 
         await this.typeormRepository.delete(id);
-    }
-
-    async deleteItemByUuid(uuid: string, item: string): Promise<void> {
-        console.log("item:", item);
-
-        await this.typeormRepository.delete(uuid);
     }
 
 }
