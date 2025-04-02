@@ -12,8 +12,9 @@ import { uploadFile, deleteFile, getObjectSignedUrl } from "modules/utils/aws";
 
 import crypto from 'crypto';
 import sharp from 'sharp';
+import { sendTelegramMessage } from "config/telegram-bot-api";
 
-const generateFileName = (bytes = 16) => crypto.randomBytes(bytes).toString('hex')
+const generateFileName = (bytes = 8) => crypto.randomBytes(bytes).toString('hex')
 export class GiftRepositoryImpl
     extends BaseRepositoryImpl<GiftDTO, CreateGiftDTO, UpdateGiftDTO> {
 
@@ -107,6 +108,12 @@ export class GiftRepositoryImpl
             value: gift.gift_value,
             mpcode: gift.gift_mpcode,
         }));
+    }
+
+    
+    async telegramMessage(type: string, guest: string, gift?: string): Promise<void> {
+        const giftInfo = await this.getAllInfo(gift);
+        sendTelegramMessage(type, guest, giftInfo);
     }
 
 }

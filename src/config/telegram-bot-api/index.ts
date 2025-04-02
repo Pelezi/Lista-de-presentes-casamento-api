@@ -8,20 +8,12 @@ const bot = new telegramBot(BOT_TOKEN);
 
 async function sendTelegramMessage(route,  guest, gift?, chat?, customMessage?) {
     const action = 
-    route === 'addGiftToGuest' ? `escolheu o presente ${gift}`
-    : route === 'removeGiftFromGuest' ? `removeu o presente ${gift} da sua lista de presentes escolhidos`
-    : route === 'newGuest' ? `acessou a lista de presentes pela primeira vez`
-    : route === 'createGift' ? `criou o presente ${gift}`
-    : route === 'updateGift' ? `atualizou o presente ${gift}`
-    : route === 'deleteGift' ? `deletou o presente ${gift}`
+    route === 'pix' ? `gerou um pix do presente ${gift.name} de ${gift.value}`
+    : route === 'mp' ? `acessou o presente ${gift.name} de ${gift.value} pela api do mercado pago`
     : route === 'custom' ? ''
     : 'realizou uma ação desconhecida';
-    const icon = route === 'addGiftToGuest' ? '\ud83d\uded2' : 
-    route === 'removeGiftFromGuest' ? '\u274c'
-    : route === 'newGuest' ? '\ud83d\udd14'
-    : route === 'createGift' ? '\ud83c\udf81'
-    : route === 'updateGift' ? '\ud83d\udd04'
-    : route === 'deleteGift' ? '\ud83d\uddd1'
+    const icon = route === 'pix' ? '\ud83d\uded2' : 
+    route === 'mp' ? '\ud83d\uded2'
     : route === 'custom' ? ''
     : '\u26a0';
 
