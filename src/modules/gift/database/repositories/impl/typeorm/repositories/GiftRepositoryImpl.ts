@@ -8,11 +8,11 @@ import {
 
 import { BaseRepositoryImpl } from '../../../../../../base/BaseRepositoryImpl';
 
-import { uploadFile, deleteFile, getObjectSignedUrl } from "modules/utils/aws";
+import { uploadFile, deleteFile, getObjectSignedUrl } from "../../../../../../../modules/utils/aws";
 
 import crypto from 'crypto';
 import sharp from 'sharp';
-import { sendTelegramMessage } from "config/telegram-bot-api";
+import { sendTelegramMessage } from "../../../../../../../config/telegram-bot-api";
 
 const generateFileName = (bytes = 8) => crypto.randomBytes(bytes).toString('hex')
 export class GiftRepositoryImpl
@@ -23,47 +23,67 @@ export class GiftRepositoryImpl
     }
 
 
-    async createItem(createGiftDTO: CreateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO> {
+    async createItem(createGiftDTO: CreateGiftDTO, photo?: Express.Multer.File, guestId?: string): Promise<GiftDTO> {
         const fileName = generateFileName();
 
-        const fileBuffer = await sharp(photo.buffer)
-            .resize({ height: 1080, width: 1080, fit: "contain" })
-            .toBuffer()
-        
-        await uploadFile(fileBuffer, fileName, photo.mimetype);
+        if (photo) {
+            const fileBuffer = await sharp(photo.buffer)
+                .resize({ height: 1080, width: 1080, fit: "contain" })
+                .toBuffer()
 
+            await uploadFile(fileBuffer, fileName, photo.mimetype);
+
+        }
         const newGiftData = {
             ...createGiftDTO,
-            fileName: fileName,
+            fileName: photo ? fileName : null,
         }
 
         const gift = this.typeormRepository.create(newGiftData);
         await this.typeormRepository.save(gift);
+
+        if (guestId) {
+            const guest = await this.typeormRepository.manager.getRepository('Guest').findOne({ where: { id: guestId } });
+            const chat = guest.phone === '81998625899' ? 2 : guest.phone === '81997250606' ? 1 : null;
+
+            sendTelegramMessage('create', guest.name, newGiftData, chat);
+        }
         return gift;
     }
 
-    async updateItem(id: number, updateGiftDTO: UpdateGiftDTO, photo?: Express.Multer.File): Promise<GiftDTO> {
+    async updateItem(id: number, updateGiftDTO: UpdateGiftDTO, photo?: Express.Multer.File, guestId?: string): Promise<GiftDTO> {
         const gift = await this.getItemById(id);
         if (!gift) {
             throw new Error(`Registro não encontrado!`);
         }
-
+        
         if (photo) {
             const fileName = generateFileName();
-
-            const fileBuffer = await sharp(photo.buffer)
-                .resize({ height: 1080, width: 1080, fit: "contain" })
-                .toBuffer()
             
+            const fileBuffer = await sharp(photo.buffer)
+            .resize({ height: 1080, width: 1080, fit: "contain" })
+                .toBuffer()
+                
             await uploadFile(fileBuffer, fileName, photo.mimetype);
+            
+            if (gift.fileName) {
+                await deleteFile(gift.fileName);
+            }
 
-            await deleteFile(gift.fileName);
             gift.fileName = fileName;
-        }
+            }
 
         Object.assign(gift, updateGiftDTO);
-        await this.typeormRepository.save(gift);
-        return gift;
+        await this.typeormRepository.update(id, gift);
+
+        if (guestId) {
+            const guest = await this.typeormRepository.manager.getRepository('Guest').findOne({ where: { id: guestId } });
+            const chat = guest.phone === '81998625899' ? 2 : guest.phone === '81997250606' ? 1 : null;
+
+            sendTelegramMessage('update', guest.name, gift, chat);
+        }
+
+        return await this.getItemById(id);
     }
 
     async getAllInfo(giftId: string): Promise<GiftDTO> {
@@ -95,6 +115,7 @@ export class GiftRepositoryImpl
                 'gift.mpcode',
             ])
             .groupBy('gift.id')
+            .orderBy('gift.id', 'DESC')
             .getRawMany();
 
         if (!gifts) {
@@ -110,7 +131,7 @@ export class GiftRepositoryImpl
         }));
     }
 
-    
+
     async telegramMessage(type: string, guest: string, gift?: string): Promise<void> {
         const giftInfo = await this.getAllInfo(gift);
         sendTelegramMessage(type, guest, giftInfo);

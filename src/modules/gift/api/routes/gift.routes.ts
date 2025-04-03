@@ -17,6 +17,7 @@ const giftController: GiftController = container.resolve('GiftController');
 
 
 giftRouter.post('/', upload.single('photo'), (req, res) => giftController.createItem(req, res));
+giftRouter.put('/:id', upload.single('photo'), (req, res) => giftController.updateItem(req, res));
 giftRouter.get('/info/:giftId', (req, res) => giftController.getAllInfo(req, res));
 giftRouter.post('/telegram', (req, res) => giftController.telegramMessage(req, res));
 giftRouter.use('/', baseRoutes(giftController));

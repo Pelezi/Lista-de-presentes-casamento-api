@@ -10,10 +10,16 @@ async function sendTelegramMessage(route,  guest, gift?, chat?, customMessage?) 
     const action = 
     route === 'pix' ? `gerou um pix do presente ${gift.name} de ${gift.value}`
     : route === 'mp' ? `acessou o presente ${gift.name} de ${gift.value} pela api do mercado pago`
+    : route === 'create' ? `criou o presente ${gift.name}`
+    : route === 'update' ? `atualizou o presente ${gift.name}`
+    : route === 'delete' ? `removeu o presente ${gift.name}`
     : route === 'custom' ? ''
     : 'realizou uma ação desconhecida';
     const icon = route === 'pix' ? '\ud83d\uded2' : 
     route === 'mp' ? '\ud83d\uded2'
+    : route === 'create' ? '\ud83c\udf81'
+    : route === 'update' ? '\ud83d\udd04'
+    : route === 'delete' ? '\ud83d\uddd1'
     : route === 'custom' ? ''
     : '\u26a0';
 

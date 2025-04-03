@@ -29,18 +29,18 @@ export class GiftControllerImpl
 
     public async createItem(req: Request, res: Response): Promise<Response> {
         const { guestId } = req.query;
-        const createGiftDTO: CreateGiftDTO = { ...req.body, guestId: guestId as string };
+        const createGiftDTO: CreateGiftDTO = { ...req.body };
         const photo = req.file;
-        const gift = await this.giftService.createItem(createGiftDTO, photo);
+        const gift = await this.giftService.createItem(createGiftDTO, photo, guestId as string);
         return res.json(gift);
     }
 
     public async updateItem(req: Request, res: Response): Promise<Response> {
         const { id } = req.params;
         const { guestId } = req.query;
-        const updateGiftDTO: UpdateGiftDTO = { ...req.body, guestId: guestId as string };
+        const updateGiftDTO: UpdateGiftDTO = { ...req.body };
         const photo = req.file;
-        const gift = await this.giftService.updateItem(Number(id), updateGiftDTO, photo);
+        const gift = await this.giftService.updateItem(Number(id), updateGiftDTO, photo, guestId as string);
         return res.json(gift);
     }
 
