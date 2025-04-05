@@ -1,7 +1,7 @@
 export class GiftDTO {
     id: string;
     name: string;
-    value: string;
+    value: string | number;
     fileName: string;
     mpcode: string;
 }
