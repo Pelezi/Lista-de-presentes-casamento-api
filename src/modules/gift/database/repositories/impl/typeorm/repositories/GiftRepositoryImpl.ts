@@ -115,7 +115,7 @@ export class GiftRepositoryImpl
                 'gift.mpcode',
             ])
             .groupBy('gift.id')
-            .orderBy('gift.id', 'DESC')
+            .orderBy('gift.value', 'ASC')
             .getRawMany();
 
         if (!gifts) {
