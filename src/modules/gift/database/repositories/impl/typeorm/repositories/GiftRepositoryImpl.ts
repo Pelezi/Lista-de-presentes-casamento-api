@@ -22,6 +22,9 @@ export class GiftRepositoryImpl
         super('id', Gift);
     }
 
+    formatCurrency = (value: string) => {
+        return value.replace("R$ ", "").replace("R$ ", "").replace(".", "").replace(",", ".")
+    };
 
     async createItem(createGiftDTO: CreateGiftDTO, photo?: Express.Multer.File, guestId?: string): Promise<GiftDTO> {
         const fileName = generateFileName();
@@ -34,6 +37,9 @@ export class GiftRepositoryImpl
             await uploadFile(fileBuffer, fileName, photo.mimetype);
 
         }
+
+        createGiftDTO.value = this.formatCurrency(createGiftDTO.value);
+
         const newGiftData = {
             ...createGiftDTO,
             fileName: photo ? fileName : null,
@@ -71,8 +77,10 @@ export class GiftRepositoryImpl
             }
 
             gift.fileName = fileName;
-            }
+        }
 
+        updateGiftDTO.value = this.formatCurrency(updateGiftDTO.value);
+        
         Object.assign(gift, updateGiftDTO);
         await this.typeormRepository.update(id, gift);
 
