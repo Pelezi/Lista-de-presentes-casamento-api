@@ -2,7 +2,7 @@ import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity()
 export class Gift {
-    
+
     @PrimaryGeneratedColumn("increment")
     id: string;
 
@@ -14,8 +14,11 @@ export class Gift {
     })
     fileName: string;
 
-    @Column()
-    value: string;
+    @Column("decimal", {
+        precision: 10, 
+        scale: 2,     
+    })
+    value: number;
 
     @Column({
         nullable: true,
