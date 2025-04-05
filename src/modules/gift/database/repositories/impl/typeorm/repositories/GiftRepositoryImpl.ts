@@ -23,7 +23,7 @@ export class GiftRepositoryImpl
     }
 
     async formatCurrency(value: string): Promise<number> {
-        return parseFloat(value.replace("R$ ", "").replace("R$ ", ""));
+        return parseFloat(value.replace("R$ ", "").replace("R$ ", "").replace(".", "").replace(",", "."));
     };
 
     async createItem(createGiftDTO: CreateGiftDTO, photo?: Express.Multer.File, guestId?: string): Promise<GiftDTO> {
