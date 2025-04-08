@@ -36,8 +36,8 @@ export class GiftServiceImpl
         return this.giftRepository.getAllInfo(giftId);
     }
 
-    async telegramMessage(type: string, guest: string, gift?: string): Promise<void> {
-        await this.giftRepository.telegramMessage(type, guest, gift);
+    async telegramMessage(type: string, guest: string, gift?: string, message?: string): Promise<void> {
+        await this.giftRepository.telegramMessage(type, guest, gift, message);
     }
 
 }

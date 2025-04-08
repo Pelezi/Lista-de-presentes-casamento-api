@@ -144,9 +144,16 @@ export class GiftRepositoryImpl
     }
 
 
-    async telegramMessage(type: string, guest: string, gift?: string): Promise<void> {
+    async telegramMessage(type: string, guest: string, gift?: string, message?: string): Promise<void> {
         const giftInfo = await this.getAllInfo(gift);
+        if (type == 'thankYouPix' || type == 'thankYouMp') {
         sendTelegramMessage(type, guest, giftInfo);
+        } else if (type == 'custom') {
+            const fullMessage = `\ud83d\udc8c O convidado ${guest} Deixou um recado na tela de agradeciemnto do presente ${giftInfo.name}! \n\n${message}`;
+            sendTelegramMessage('custom', guest, 'custom', 1, fullMessage);
+        } else {
+            throw new Error(`Tipo de mensagem inválido!`);
+        }
     }
 
 }

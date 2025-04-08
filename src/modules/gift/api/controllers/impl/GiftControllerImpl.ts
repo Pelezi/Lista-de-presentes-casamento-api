@@ -52,7 +52,8 @@ export class GiftControllerImpl
 
     public async telegramMessage(req: Request, res: Response): Promise<Response> {
         const { type, guest, gift } = req.query;
-        await this.giftService.telegramMessage(type as string, guest as string, gift as string);
+        const message: string = req.body.message;
+        await this.giftService.telegramMessage(type as string, guest as string, gift as string, message);
         return res.status(204).send();
     }
 
