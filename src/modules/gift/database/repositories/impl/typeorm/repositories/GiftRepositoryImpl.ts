@@ -147,7 +147,7 @@ export class GiftRepositoryImpl
     async telegramMessage(type: string, guest: string, gift?: string, message?: string): Promise<void> {
         const giftInfo = await this.getAllInfo(gift);
         if (type == 'custom') {
-            const fullMessage = `\ud83d\udc8c O convidado ${guest} Deixou um recado na tela de agradeciemnto do presente ${giftInfo.name}! \n\n${message}`;
+            const fullMessage = `\ud83d\udc8c O convidado ${guest} Deixou um recado na tela de agradecimento do presente ${giftInfo.name}! \n\n${message}`;
             sendTelegramMessage('custom', guest, 'custom', 1, fullMessage);
         } else {
             sendTelegramMessage(type, guest, giftInfo);
